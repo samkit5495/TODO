@@ -25,7 +25,17 @@ app.use(express.urlencoded({ extended: false }));
 
 app.get('/', async (req, res) => {
   const todos = database.client.db('todos').collection('todos');
-  const response = await todos.find({}).toArray();
+  const limit = req.query.limit && parseInt(req.query.limit, 10) > 0 ? parseInt(req.query.limit, 10) : null;
+  const page = req.query.page && parseInt(req.query.page, 10) > 0 ? parseInt(req.query.page, 10) : null;
+  const skip = page ? (page - 1) * limit : null;
+  let todoPromise = todos.find({});
+  if(limit){
+    todoPromise = todoPromise.limit(limit);
+  }
+  if(skip){
+    todoPromise = todoPromise.skip(skip);
+  }
+  const response = await todoPromise.toArray();
   res.status(200);
   res.json(response);
 });
